@@ -7,12 +7,10 @@
 
 .data
     ;keys db 10000 * 17 DUP(?)  
-    ;value db 10000 * 16 DUP(?)  
+    ;value db 10000 * 16 DUP(?) 
+    ROW db 23 dup (?) 
     temp_key db 8 dup(?)
     temp_value db 8 dup(?)
-    prompt db 0dh,0ah,"Enter your string(7 Chars Max): $"
-    msg1 db  0dh,0ah,"Your input: $"
-    sev db 7 dup(?)
     
 .code
 main PROC
@@ -22,6 +20,7 @@ main PROC
         mov ax, @data
         mov ds, ax
         mov es, ax
+        mov bx, 0
         
     ;----- clear screen
 
@@ -29,32 +28,36 @@ main PROC
         mov ah, 00h
         int 10h   
 
-    ;----- prep
-
-        mov dx, offset prompt
-        mov ah,09h
-        int 21h
-        lea si, temp_key
-        mov cx,16
-
     ;----- read row from console
 
         read_row:
         mov ah,01
         int 21h
-        mov [si],al
-        inc si
-        loop read_row
 
-    ;----- print input
+        cmp al, 13
+        je string_end
 
-        mov si+sev,'$'
-        mov dx,offset msg1
-        mov ah,09h
+        mov [ROW + bx],al
+        cmp bx, 23
+        inc bx
+        jbe read_row
+        mov bx, 0
+        jmp write_row
+
+        string_end:
+        mov bx, 0
+        jmp write_row
+
+    ;----- read row from console
+
+        write_row:
+        mov ah, 02h
+        mov dx, offset [ROW + bx]
         int 21h
-        lea dx,temp_key
-        mov ah,09h
-        int 21h
+
+        cmp bx, 23
+        inc bx
+        jbe write_row
 
     ;----- termination of a program
         mov ah, 4ch
