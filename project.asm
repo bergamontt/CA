@@ -17,7 +17,11 @@
     
     temp_key db 16 dup(?)
     temp_value db 6 dup(?)
+    temp_key_length dw 0
+    temp_value_length dw 0
 
+    num_of_keys dw 0
+    num_of_values dw 0
     
 .code
 main PROC
@@ -83,9 +87,32 @@ main PROC
         inc bp
         jmp read_value
 
-    ;----- add key and values to arrays
+    ;----- add key to array with keys
 
         add_to_array:
+
+        add_key:
+        mov ax, num_of_keys
+        mov bl, keys_size
+        mul bx
+        mov bx, ax
+        mov bp, 0
+
+        add_key_bytes:
+        mov al, [temp_key + bp]
+        mov [keys + bx], al
+        cmp bp, temp_key_length
+        inc bp
+        jbe add_key_bytes
+        jmp add_value
+
+    ;----- add value to array with values
+
+        add_value:
+        ;setup
+        ;turn ascii into decimal
+        ;store it as hex number in array
+        ;jump back to get next line from user
 
     ;----- write row to console
 
