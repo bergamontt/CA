@@ -20,6 +20,8 @@
     temp_key_length dw 0
     temp_value_length dw 0
 
+    is_Negative db 0
+
     num_of_keys dw 0
     num_of_values dw 0
     
@@ -109,10 +111,42 @@ main PROC
     ;----- add value to array with values
 
         add_value:
-        ;setup
+        mov dx, 0
+        jmp check_sign
+        
+        add_value_to_array:
+
         ;turn ascii into decimal
         ;store it as hex number in array
         ;jump back to get next line from user
+
+    ;----- check if value is negative
+
+        check_sign:
+
+        mov ax, 0
+        cmp [temp_value], '-'
+        je negative_number
+        jmp positive_number
+
+    ;----- convert from ascii to hex for positive number
+
+        positive_number:
+        mov bx, temp_key_length
+        positive_loop:
+        dec bx
+        mov al, [temp_key + bx]
+        mov cl, 10
+        mul cx
+        add dx, ax
+        cmp bx, 0
+
+        ja positive_loop
+        jmp add_value_to_array
+
+    ;----- convert from ascii to hex for negative number
+
+        negative_number:
 
     ;----- write row to console
 
