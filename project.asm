@@ -146,7 +146,6 @@ init_arrays:
 
         prep_for_loop:
 
-
             inc LAST_INDEX
             inc BYTES_CHECKED
             inc LAST_INDEX
@@ -163,6 +162,9 @@ init_arrays:
 
     setup_remove_dubl:
 
+        mov bx, 0 ;starting index of a key
+        check_each_key:
+            
 
     
     end_program:
@@ -182,5 +184,46 @@ init_arrays:
             int 21h          
 
 start ENDP
+
+compareStrings PROC
+
+    ;bx - індекс першого елемента
+    ;cx - індекс другого елемента
+    ;al - результат 48 - не рівні, 49 - рівні
+
+    mov ax, 16
+    mul bx
+    mov bx, ax ;розрахування позиції першого чара елемента під індексом bx
+
+    mov ax, 16 ;розрахування позиції першого чара елемента під індексом ax
+    mul cx
+    mov cx, ax
+
+    check_characters:
+
+        mov al, [KEYS + bx]
+
+        mov bx, cx
+        cmp al, [KEYS + bx]
+        jne not_equal
+
+        inc bx
+        inc cx
+        cmp bx, 16
+        je equal
+        jmp check_characters
+    
+    equal:
+        mov al, 49
+        jmp ending
+
+    not_equal:
+        mov al, 48
+        jmp ending
+
+    ending:
+        ret
+
+compareStrings ENDP
 
 END start
