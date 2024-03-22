@@ -35,11 +35,11 @@ start PROC
 
 read_file:
 
-    mov ah, 3Fh       ; Function to read from file
-    mov bx, 0         ; File handle for stdin
-    mov cx, 23000       ; Number of bytes to read
-    mov dx, offset [DUMP] ; Read to ds:dx
-    int 21h           ; Number of bytes read returned in AX
+    mov ah, 3Fh       
+    mov bx, 0        
+    mov cx, 23000       
+    mov dx, offset [DUMP] 
+    int 21h         
     mov BYTES_READ, ax
     jmp end_reading_file    
 
@@ -174,19 +174,26 @@ init_arrays:
 
             call compareStrings
 
-            inc LAST_CX_INDEX
             mov bx, LAST_BX_INDEX ;повернення ідексів у bx та сх
             mov cx, LAST_CX_INDEX
 
             cmp al, 49
             je remove_key
 
+            inc LAST_CX_INDEX
+            mov cx, LAST_CX_INDEX
+
             cmp cx, NUM_OF_KEYS
-            je next_key
+            jge next_key
+            jmp check_each_key
 
         remove_key:   
         ;прибирання дублікатного ключа та додавання його значення до суми, розрахування кількості однакових
         ;ключів 
+        
+            mov LAST_CX_INDEX, cx
+            call deleteKey
+            mov cx, LAST_CX_INDEX
 
         next_key:
         ;перехід bx на наступний індекс, перевірка чи цей ключ пустий
@@ -211,6 +218,27 @@ init_arrays:
             int 21h          
 
 start ENDP
+
+deleteKey PROC
+
+    ;cx - індекс елемента, який треба видалити
+
+    mov ax, 16
+    mul cx
+    mov bx, ax ;позиція ключа в загальному масиві
+    xor ax, ax
+
+        clear_key_chars:
+
+            mov [KEYS + bx], 0
+            inc bx
+            inc ax
+            cmp ax, 16
+            jne clear_key_chars
+
+        ret
+
+deleteKey ENDP
 
 compareStrings PROC
 
