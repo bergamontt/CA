@@ -7,18 +7,19 @@
 .data
 
 KEYS db 1000 dup (?)
-VALUES db 1000 dup (?)
+H_VALUES dw 1000 dup (?)
 
 TEMP_VALUE db 6 dup (?)
 TEMP_VALUE_SIZE dw 0
 TEMP_VALUE_BUFFER dw 0
 
-H_VALUES dw 1000 dup (?)
-
 DUMP db 23000 dup (?)
 
 BYTES_READ dw 0;
 BYTES_CHECKED dw 0;
+
+LAST_BX_INDEX dw 0;
+LAST_CX_INDEX dw 0
 
 LAST_INDEX dw 0;
 NUM_OF_KEYS dw 0
@@ -163,21 +164,47 @@ init_arrays:
     setup_remove_dubl:
 
         mov bx, 0 ;starting index of a key
-        check_each_key:
-            
+        mov cx, 1 ; starting index of a key for the second key
+        mov ax, 0
 
-    
+        check_each_key:
+
+            mov LAST_BX_INDEX, bx   ;зберігання індексів перед викликом функцій
+            mov LAST_CX_INDEX, cx
+
+            call compareStrings
+
+            inc LAST_CX_INDEX
+            mov bx, LAST_BX_INDEX ;повернення ідексів у bx та сх
+            mov cx, LAST_CX_INDEX
+
+            cmp al, 49
+            je remove_key
+
+            cmp cx, NUM_OF_KEYS
+            je next_key
+
+        remove_key:   
+        ;прибирання дублікатного ключа та додавання його значення до суми, розрахування кількості однакових
+        ;ключів 
+
+        next_key:
+        ;перехід bx на наступний індекс, перевірка чи цей ключ пустий
+        ;перевірити чи bx досягло кількість заг ключів
+        ;якщо досягло, то прибирання однакових ключів завершено, тоді
+        ;стрибаємо до сортування
+            
     end_program:
 
         mov bx, 0
 
         write:
-            mov dx, NUM_OF_KEYS
-            ; mov dl, [TEMP_VALUE + bx]
+            ; mov dx, NUM_OF_KEYS
+            mov dl, [KEYS + bx]
             mov ah, 02h
             int 21h
             inc bx
-            cmp bx, 17
+            cmp bx, 100
             jne write
 
             mov ax, 4C00h   
