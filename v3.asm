@@ -20,6 +20,7 @@ BYTES_CHECKED dw 0;
 
 LAST_BX_INDEX dw 0;
 LAST_CX_INDEX dw 0
+TEMP_L dw 0
 
 LAST_INDEX dw 0;
 NUM_OF_KEYS dw 0
@@ -158,7 +159,7 @@ init_arrays:
         
             mov cx, BYTES_READ
             cmp BYTES_CHECKED, cx
-            jae end_program
+            jae setup_remove_dubl ;;тут поставила шнягу для перевірки на дублікати
             jmp init_arrays
 
     setup_remove_dubl:
@@ -174,9 +175,6 @@ init_arrays:
 
             call compareStrings
 
-            mov bx, LAST_BX_INDEX ;повернення ідексів у bx та сх
-            mov cx, LAST_CX_INDEX
-
             cmp al, 49
             je remove_key
 
@@ -190,16 +188,40 @@ init_arrays:
         remove_key:   
         ;прибирання дублікатного ключа та додавання його значення до суми, розрахування кількості однакових
         ;ключів 
-        
+
+            mov LAST_BX_INDEX, bx   ;зберігання індексів перед викликом функцій
             mov LAST_CX_INDEX, cx
-            call deleteKey
+            call deleteKeys
+            mov bx, LAST_BX_INDEX ;повернення ідексів у bx та сх
+
+            inc LAST_CX_INDEX
             mov cx, LAST_CX_INDEX
+
+            cmp cx, NUM_OF_KEYS
+            jge next_key
+            jmp check_each_key
+
 
         next_key:
         ;перехід bx на наступний індекс, перевірка чи цей ключ пустий
         ;перевірити чи bx досягло кількість заг ключів
         ;якщо досягло, то прибирання однакових ключів завершено, тоді
         ;стрибаємо до сортування
+            inc LAST_BX_INDEX
+            mov bx, LAST_BX_INDEX
+
+            mov LAST_CX_INDEX, bx
+            inc LAST_CX_INDEX
+            mov cx, LAST_CX_INDEX
+
+            cmp cx, NUM_OF_KEYS
+            jge end_program
+
+            cmp bx, NUM_OF_KEYS
+            jge end_program
+
+            jmp check_each_key
+        
             
     end_program:
 
@@ -219,7 +241,7 @@ init_arrays:
 
 start ENDP
 
-deleteKey PROC
+deleteKeys PROC
 
     ;cx - індекс елемента, який треба видалити
 
@@ -234,46 +256,53 @@ deleteKey PROC
             inc bx
             inc ax
             cmp ax, 16
-            jne clear_key_chars
+            jl clear_key_chars
 
         ret
 
-deleteKey ENDP
+deleteKeys ENDP
 
 compareStrings PROC
 
-    ;bx - індекс першого елемента
-    ;cx - індекс другого елемента
-    ;al - результат 48 - не рівні, 49 - рівні
-
+    mov bx, LAST_BX_INDEX
     mov ax, 16
     mul bx
-    mov bx, ax ;розрахування позиції першого чара елемента під індексом bx
+    mov bx, ax
 
-    mov ax, 16 ;розрахування позиції першого чара елемента під індексом ax
+    mov cx, LAST_CX_INDEX
+    mov ax, 16
     mul cx
     mov cx, ax
+
+    mov TEMP_L, bx
+    add TEMP_L, 16
 
     check_characters:
 
         mov al, [KEYS + bx]
-
-        mov bx, cx
-        cmp al, [KEYS + bx]
+        xchg bx, cx 
+        cmp [KEYS + bx], al
+        xchg bx, cx 
         jne not_equal
 
         inc bx
         inc cx
-        cmp bx, 16
+        cmp bx, TEMP_L
         je equal
         jmp check_characters
     
     equal:
         mov al, 49
+        mov bx, LAST_BX_INDEX
+        mov cx, LAST_CX_INDEX
+
         jmp ending
 
     not_equal:
         mov al, 48
+        mov bx, LAST_BX_INDEX
+        mov cx, LAST_CX_INDEX
+
         jmp ending
 
     ending:
