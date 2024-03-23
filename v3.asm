@@ -28,6 +28,11 @@ NUM_OF_KEYS dw 0
 KEY_SIZE db 16
 VALUE_SIZE db 6
 
+TEMP_SUM_HI dw 0
+TEMP_SUM_LO dw 0
+
+TEMP_NUM_OF_REPS dw 1
+
 .code
 start PROC
 
@@ -165,6 +170,8 @@ init_arrays:
     setup_remove_dubl:
 
         mov bx, 0 ;starting index of a key
+        mov dx,  [H_VALUES + bx]
+        add TEMP_SUM_LO, dx
         mov cx, 1 ; starting index of a key for the second key
         mov ax, 0
 
@@ -189,6 +196,14 @@ init_arrays:
         ;прибирання дублікатного ключа та додавання його значення до суми, розрахування кількості однакових
         ;ключів 
 
+            mov bp, cx      ;додавання до темп суми...
+            mov dx, [H_VALUES + bp]
+            add dx, TEMP_SUM_LO
+            adc TEMP_SUM_HI, 0
+            mov [H_VALUES + bp], 0 ;онулення суми ключа з якого додаємо
+
+            inc TEMP_NUM_OF_REPS
+
             mov LAST_BX_INDEX, bx   ;зберігання індексів перед викликом функцій
             mov LAST_CX_INDEX, cx
             call deleteKeys
@@ -207,6 +222,19 @@ init_arrays:
         ;перевірити чи bx досягло кількість заг ключів
         ;якщо досягло, то прибирання однакових ключів завершено, тоді
         ;стрибаємо до сортування
+
+            ;ділення заг суми bx числа на кількість входження
+            mov dx, TEMP_SUM_HI
+            mov ax, TEMP_SUM_LO
+            mov bx, TEMP_NUM_OF_REPS
+            div bx ; ділення dx:ax / num of reps    - в ах результат
+            mov bx, LAST_BX_INDEX
+            mov [H_VALUES + bx], ax ;- збереження average
+
+            mov TEMP_NUM_OF_REPS, 1
+            mov TEMP_SUM_HI, 0
+            mov TEMP_SUM_LO, 0 ;очищення тимчачових сум для average
+
             inc LAST_BX_INDEX
             mov bx, LAST_BX_INDEX
 
