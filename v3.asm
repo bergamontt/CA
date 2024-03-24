@@ -6,10 +6,14 @@
 
 .data
 
+TEMP_SUM_HI dw 0
+TEMP_SUM_LO dw 0
+TEMP_NUM_OF_REPS dw 1
+
 KEYS db 1000 dup (?)
 H_VALUES dw 1000 dup (?)
 
-TEMP_VALUE db 6 dup (?)
+TEMP_VALUE db 6 dup (0)
 TEMP_VALUE_SIZE dw 0
 TEMP_VALUE_BUFFER dw 0
 
@@ -25,13 +29,10 @@ TEMP_L dw 0
 LAST_INDEX dw 0;
 NUM_OF_KEYS dw 0
 
+BX_VALUES_INDEX dw 0;
+
 KEY_SIZE db 16
 VALUE_SIZE db 6
-
-TEMP_SUM_HI dw 0
-TEMP_SUM_LO dw 0
-
-TEMP_NUM_OF_REPS dw 1
 
 .code
 start PROC
@@ -96,6 +97,10 @@ init_arrays:
             je to_hex
             cmp al, 10
             je to_hex
+            cmp al, 0
+            je to_hex
+            cmp al, 255
+            je to_hex
 
             mov bx, cx
             mov [TEMP_VALUE + bx], al
@@ -123,7 +128,7 @@ init_arrays:
                 cmp al, '-'
                 je negative_number
 
-                sub al, 48
+                sub ax, 48
 
                 mul cx
                 add TEMP_VALUE_BUFFER, ax
@@ -133,7 +138,7 @@ init_arrays:
                 mov cx, ax
 
                 cmp bx, 0
-                ja convert
+                jg convert
                 mov ax, TEMP_VALUE_BUFFER
                 jmp end_of_convertion
 
@@ -143,15 +148,18 @@ init_arrays:
                 xor al, 255
                 xor ah, 255
                 add ax, 1
+                mov TEMP_VALUE_BUFFER, ax
                 jmp end_of_convertion
 
             end_of_convertion:
 
-                mov bx, NUM_OF_KEYS
+                mov bx, BX_VALUES_INDEX
                 mov [H_VALUES + bx], ax
                 jmp prep_for_loop
 
         prep_for_loop:
+
+            add BX_VALUES_INDEX, 2
 
             inc LAST_INDEX
             inc BYTES_CHECKED
@@ -196,16 +204,21 @@ init_arrays:
         ;прибирання дублікатного ключа та додавання його значення до суми, розрахування кількості однакових
         ;ключів 
 
-            mov bp, cx      ;додавання до темп суми...
-            mov dx, [H_VALUES + bp]
-            add dx, TEMP_SUM_LO
+            mov LAST_BX_INDEX, bx   ;зберігання індексів перед викликом функцій
+            mov LAST_CX_INDEX, cx
+
+            mov ax, 2
+            mul cx
+            mov bx, ax    ;додавання до темп суми...
+            mov dx, [H_VALUES + bx]
+            add TEMP_SUM_LO, dx 
             adc TEMP_SUM_HI, 0
-            mov [H_VALUES + bp], 0 ;онулення суми ключа з якого додаємо
 
             inc TEMP_NUM_OF_REPS
 
-            mov LAST_BX_INDEX, bx   ;зберігання індексів перед викликом функцій
-            mov LAST_CX_INDEX, cx
+            mov bx, LAST_BX_INDEX
+            mov cx, LAST_CX_INDEX
+
             call deleteKeys
             mov bx, LAST_BX_INDEX ;повернення ідексів у bx та сх
 
@@ -227,8 +240,14 @@ init_arrays:
             mov dx, TEMP_SUM_HI
             mov ax, TEMP_SUM_LO
             mov bx, TEMP_NUM_OF_REPS
+
             div bx ; ділення dx:ax / num of reps    - в ах результат
+            mov cx, ax
             mov bx, LAST_BX_INDEX
+            mov ax, 2
+            mul bx
+            mov bx, ax
+            mov ax, cx
             mov [H_VALUES + bx], ax ;- збереження average
 
             mov TEMP_NUM_OF_REPS, 1
@@ -257,7 +276,7 @@ init_arrays:
 
         write:
             ; mov dx, NUM_OF_KEYS
-            mov dl, [KEYS + bx]
+            mov dx, [H_VALUES + bx]
             mov ah, 02h
             int 21h
             inc bx
@@ -272,6 +291,11 @@ start ENDP
 deleteKeys PROC
 
     ;cx - індекс елемента, який треба видалити
+
+    mov ax, 2   ;видаляє значення дублікатного числа
+    mul cx
+    mov bx, ax
+    mov [H_VALUES + bx], 0
 
     mov ax, 16
     mul cx
