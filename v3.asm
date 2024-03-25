@@ -6,6 +6,12 @@
 
 .data
 
+LAST_INDEX_VALUE dw 0
+LAST_INDEX_KEY dw 0
+
+LAST_INDEX_I dw 0
+LAST_INDEX_J dw 0
+
 TEMP_SUM_HI dw 0
 TEMP_SUM_LO dw 0
 TEMP_NUM_OF_REPS dw 1
@@ -212,7 +218,6 @@ init_arrays:
             mov bx, ax    ;додавання до темп суми...
             mov dx, [H_VALUES + bx]
             add TEMP_SUM_LO, dx 
-            adc TEMP_SUM_HI, 0
 
             inc TEMP_NUM_OF_REPS
 
@@ -268,12 +273,37 @@ init_arrays:
             jge end_program
 
             jmp check_each_key
+
+    
+    sort_buble_prep: 
+
+        mov LAST_INDEX_I, 0
+        mov LAST_INDEX_J, 0
+        mov bx, LAST_INDEX_KEY
+
+        loop_i:
+
+            loop_j:
+
+                mov ax, [H_VALUES + bx]
+                add LAST_INDEX_KEY, 2
+                mov bx, LAST_INDEX_KEY
+                mov cx, [H_VALUES + bx]
+                cmp ax, cx
+                jl swap_value
+                jmp inc_loop_index
+
+        
+        swap_value:
+
+        inc_loop_index:
+
+    jmp end_program 
         
             
     end_program:
 
         mov bx, 0
-
         write:
             ; mov dx, NUM_OF_KEYS
             mov dx, [H_VALUES + bx]
@@ -361,5 +391,4 @@ compareStrings PROC
         ret
 
 compareStrings ENDP
-
 END start
