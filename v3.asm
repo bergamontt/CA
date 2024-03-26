@@ -267,10 +267,10 @@ init_arrays:
             mov cx, LAST_CX_INDEX
 
             cmp cx, NUM_OF_KEYS
-            jge end_program
+            jge sort_buble_prep ;з богом
 
             cmp bx, NUM_OF_KEYS
-            jge end_program
+            jge sort_buble_prep  ;з богом
 
             jmp check_each_key
 
@@ -282,9 +282,9 @@ init_arrays:
         mov bx, LAST_INDEX_KEY
 
         loop_i:
-
+            jmp loop_j
             loop_j:
-
+                mov bx, LAST_INDEX_KEY
                 mov ax, [H_VALUES + bx]
                 add LAST_INDEX_KEY, 2
                 mov bx, LAST_INDEX_KEY
@@ -295,28 +295,84 @@ init_arrays:
 
         
         swap_value:
+            call swapKeys
+            jmp inc_loop_index
 
         inc_loop_index:
 
-    jmp end_program 
-        
-            
+            inc LAST_INDEX_J
+            mov ax, NUM_OF_KEYS
+            dec ax
+            cmp LAST_INDEX_J, ax
+            jne loop_i
+
+            mov LAST_INDEX_KEY, 0
+            mov LAST_INDEX_J, 0
+            inc LAST_INDEX_I
+            inc ax
+            cmp LAST_INDEX_I, ax
+            jl loop_i
+            jmp end_program
+
     end_program:
+
+        mov cx, NUM_OF_KEYS
+        mov ax, 16
+        mul cx
+        mov cx, ax
+        mov ax, 0 ;кількість рядків які треба вивести
 
         mov bx, 0
         write:
-            ; mov dx, NUM_OF_KEYS
-            mov dx, [H_VALUES + bx]
+            mov dl, [KEYS + bx]
             mov ah, 02h
             int 21h
             inc bx
-            cmp bx, 100
+            cmp bx, cx
             jne write
 
             mov ax, 4C00h   
             int 21h          
 
 start ENDP
+
+swapKeys PROC
+
+    mov bx, LAST_INDEX_J
+    mov ax, 2
+    mul bx
+    mov bx, ax
+
+    mov ax, [H_VALUES + bx]
+    add bx, 2
+    mov cx, [H_VALUES + bx]
+    sub bx, 2
+    mov [H_VALUES + bx], cx
+    add bx, 2
+    mov [H_VALUES + bx], ax
+
+    mov bx, LAST_INDEX_J
+    mov ax, 16
+    mul bx
+    mov bx, ax
+
+    mov si, bx
+    add si, 16 ;коефіцієнти
+
+    mov cx, 0
+
+        swap_chars:
+            mov al, [KEYS + bx]
+            mov ah, [KEYS + si]
+            mov [KEYS + bx], ah
+            mov [KEYS + si], al
+            inc cx
+            inc bx
+            inc si
+            cmp cx, 16
+            jne swap_chars
+    ret
+swapKeys ENDP
 
 deleteKeys PROC
 
