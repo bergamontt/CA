@@ -6,6 +6,10 @@
 
 .data
 
+NUM_OF_KEYS_REMOVED dw 0
+NUM_OF_KEYS_BYTES dw 0
+
+LENGTH_PRINTING_KEY db 0
 LAST_INDEX_VALUE dw 0
 LAST_INDEX_KEY dw 0
 
@@ -16,14 +20,14 @@ TEMP_SUM_HI dw 0
 TEMP_SUM_LO dw 0
 TEMP_NUM_OF_REPS dw 1
 
-KEYS db 1000 dup (?)
-H_VALUES dw 1000 dup (?)
+KEYS db 23000 dup (?)
+H_VALUES dw 6000 dup (?)
 
 TEMP_VALUE db 6 dup (0)
 TEMP_VALUE_SIZE dw 0
 TEMP_VALUE_BUFFER dw 0
 
-DUMP db 23000 dup (?)
+DUMP db 29000 dup (?)
 
 BYTES_READ dw 0;
 BYTES_CHECKED dw 0;
@@ -129,6 +133,7 @@ init_arrays:
             convert:
 
                 dec bx
+                mov ax, 0
                 mov al, [TEMP_VALUE + bx]
 
                 cmp al, '-'
@@ -175,6 +180,14 @@ init_arrays:
 
             mov TEMP_VALUE_SIZE, 0
             mov TEMP_VALUE_BUFFER, 0
+
+            mov cx, 6
+            clear_buffer:
+                mov bx, cx
+                mov [TEMP_VALUE + bx], 0
+                cmp cx, 0
+                dec cx
+                jne clear_buffer
         
             mov cx, BYTES_READ
             cmp BYTES_CHECKED, cx
@@ -242,24 +255,43 @@ init_arrays:
         ;стрибаємо до сортування
 
             ;ділення заг суми bx числа на кількість входження
-            mov dx, TEMP_SUM_HI
+
+            test TEMP_SUM_LO, 8000h
+            je not_negg
+            jmp negg
+
+            negg:
+                not TEMP_SUM_LO
+
+            not_negg:
+            mov dx, 0
             mov ax, TEMP_SUM_LO
             mov bx, TEMP_NUM_OF_REPS
 
             div bx ; ділення dx:ax / num of reps    - в ах результат
             mov cx, ax
+
             mov bx, LAST_BX_INDEX
             mov ax, 2
             mul bx
             mov bx, ax
-            mov ax, cx
-            mov [H_VALUES + bx], ax ;- збереження average
+
+            mov [H_VALUES + bx], cx ;- збереження average
 
             mov TEMP_NUM_OF_REPS, 1
             mov TEMP_SUM_HI, 0
-            mov TEMP_SUM_LO, 0 ;очищення тимчачових сум для average
+            mov TEMP_SUM_LO, 0 ; очищення тимчачових сум для average
 
             inc LAST_BX_INDEX
+            mov bx, LAST_BX_INDEX
+            
+            ; перевірити ключ правильно сортує... але не прибирає чогось дублікати. 
+            mov ax, 2
+            mul bx
+            mov bx, ax
+
+            mov dx, [H_VALUES + bx]
+            add TEMP_SUM_LO, dx
             mov bx, LAST_BX_INDEX
 
             mov LAST_CX_INDEX, bx
@@ -315,22 +347,54 @@ init_arrays:
             jmp end_program
 
     end_program:
-
-        mov cx, NUM_OF_KEYS
+        mov LAST_INDEX, 0
         mov ax, 16
-        mul cx
-        mov cx, ax
-        mov ax, 0 ;кількість рядків які треба вивести
+        mov bx, NUM_OF_KEYS
+        mul bx
+        mov NUM_OF_KEYS_BYTES, ax
 
-        mov bx, 0
-        write:
-            mov dl, [KEYS + bx]
-            mov ah, 02h
-            int 21h
-            inc bx
-            cmp bx, cx
-            jne write
+        print_result_prep:
 
+            mov bx, LAST_INDEX
+            cmp bx, 1500
+            jg final
+
+            check_key:
+
+                mov dl, [KEYS + bx]
+                cmp dl, 0
+                je skip
+                jmp print_key
+
+            skip:
+                add LAST_INDEX, 16
+                jmp print_result_prep
+            
+            print_key:
+
+                mov dl, [KEYS + bx]
+                cmp dl, 0
+                je print_next
+
+                mov ah, 02h
+                int 21h
+
+                inc bx
+                jmp print_key
+
+            print_next:
+
+                mov dl, 13
+                mov ah, 02h
+                int 21h
+
+                mov dl, 10
+                int 21h
+
+                add LAST_INDEX, 16
+                jmp print_result_prep
+
+        final:
             mov ax, 4C00h   
             int 21h          
 
