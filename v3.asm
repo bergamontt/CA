@@ -190,6 +190,11 @@ init_arrays:
         mov bx, 0 ;starting index of a key
         mov dx,  [H_VALUES + bx]
         add TEMP_SUM_LO, dx
+        test TEMP_SUM_LO, 8000h
+        je not_neggg
+        not TEMP_SUM_HI
+        not_neggg:
+
         mov cx, 1 ; starting index of a key for the second key
         mov ax, 0
 
@@ -222,6 +227,7 @@ init_arrays:
             mov bx, ax    ;додавання до темп суми...
             mov dx, [H_VALUES + bx]
             add TEMP_SUM_LO, dx 
+            adc TEMP_SUM_HI, 0
 
             inc TEMP_NUM_OF_REPS
 
@@ -254,7 +260,7 @@ init_arrays:
                 not TEMP_SUM_LO
                 inc TEMP_SUM_LO
             not_negg:
-            mov dx, 0
+            mov dx, TEMP_SUM_HI
             mov ax, TEMP_SUM_LO
             mov bx, TEMP_NUM_OF_REPS
 
@@ -282,6 +288,10 @@ init_arrays:
 
             mov dx, [H_VALUES + bx]
             add TEMP_SUM_LO, dx
+            test TEMP_SUM_LO, 8000h
+            je not_ne
+            not TEMP_SUM_HI
+            not_ne:
             mov bx, LAST_BX_INDEX
 
             mov LAST_CX_INDEX, bx
