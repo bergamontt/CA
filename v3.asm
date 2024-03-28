@@ -120,7 +120,6 @@ init_arrays:
             mov dx, 0
             mov bx, TEMP_VALUE_SIZE
             mov cx, 1
-            jmp convert
 
             convert:
 
@@ -250,13 +249,11 @@ init_arrays:
 
             test TEMP_SUM_LO, 8000h
             je not_negg
-            jmp negg
 
             negg:
                 not TEMP_SUM_LO
-
+                inc TEMP_SUM_LO
             not_negg:
-
             mov dx, 0
             mov ax, TEMP_SUM_LO
             mov bx, TEMP_NUM_OF_REPS
@@ -344,7 +341,7 @@ init_arrays:
 
         print_result_prep:
             mov bx, LAST_INDEX
-            cmp bx, 1500
+            cmp bx, NUM_OF_KEYS_BYTES
             jg final
 
             check_key:
@@ -490,8 +487,6 @@ compareStrings PROC
         mov al, 48
         mov bx, LAST_BX_INDEX
         mov cx, LAST_CX_INDEX
-
-        jmp ending
 
     ending:
         ret
