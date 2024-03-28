@@ -58,12 +58,6 @@ read_file:
     mov dx, offset [DUMP] 
     int 21h         
     mov BYTES_READ, ax
-    jmp end_reading_file    
-
-
-end_reading_file:
-
-    jmp init_arrays
 
 init_arrays:
 
@@ -71,7 +65,6 @@ init_arrays:
     mov ax, NUM_OF_KEYS
     mul bx
     mov cx, ax
-    jmp fill_key
 
     fill_key:
 
@@ -96,7 +89,6 @@ init_arrays:
         inc BYTES_CHECKED
         inc LAST_INDEX
         mov cx, 0
-        jmp fill_value
 
         fill_value:
 
@@ -264,6 +256,7 @@ init_arrays:
                 not TEMP_SUM_LO
 
             not_negg:
+
             mov dx, 0
             mov ax, TEMP_SUM_LO
             mov bx, TEMP_NUM_OF_REPS
@@ -308,13 +301,11 @@ init_arrays:
 
     
     sort_buble_prep: 
-
         mov LAST_INDEX_I, 0
         mov LAST_INDEX_J, 0
         mov bx, LAST_INDEX_KEY
 
         loop_i:
-            jmp loop_j
             loop_j:
                 mov bx, LAST_INDEX_KEY
                 mov ax, [H_VALUES + bx]
@@ -325,10 +316,8 @@ init_arrays:
                 jl swap_value
                 jmp inc_loop_index
 
-        
         swap_value:
             call swapKeys
-            jmp inc_loop_index
 
         inc_loop_index:
 
@@ -354,13 +343,11 @@ init_arrays:
         mov NUM_OF_KEYS_BYTES, ax
 
         print_result_prep:
-
             mov bx, LAST_INDEX
             cmp bx, 1500
             jg final
 
             check_key:
-
                 mov dl, [KEYS + bx]
                 cmp dl, 0
                 je skip
@@ -497,7 +484,6 @@ compareStrings PROC
         mov al, 49
         mov bx, LAST_BX_INDEX
         mov cx, LAST_CX_INDEX
-
         jmp ending
 
     not_equal:
