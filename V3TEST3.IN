@@ -1,0 +1,7 @@
+abc -5000
+cba 0
+abc -1
+cba 5001
+abc 5000
+cba 10001
+cba -1
